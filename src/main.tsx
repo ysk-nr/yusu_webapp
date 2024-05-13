@@ -11,10 +11,11 @@ import {
   // Link,
 } from "react-router-dom";
 
+const myRepositoryName = "yusu_webapp";
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/" + myRepositoryName + "/",
     element: <Home />
   },
   {
