@@ -3,7 +3,7 @@ import { useState } from 'react'
 // import viteLogo from '/vite.svg'
 // import './App.css'
 
-export function App() {
+function App() {
   const [count, setCount] = useState(0)
   function print_count(){
     setCount((count) => count + 1);
@@ -28,4 +28,4 @@ export function App() {
   )
 }
 
-// export default App
+export default App;
