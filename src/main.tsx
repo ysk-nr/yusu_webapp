@@ -11,10 +11,14 @@ import {
   // Link,
 } from "react-router-dom";
 
+import { UIProvider } from '@yamada-ui/react';
+
+const my_repository_name = "yusu_webapp";
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/" + my_repository_name + "/", // This is the base path of the repository
+    // path: "/",
     element: <Home />
   },
   {
@@ -30,6 +34,8 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <UIProvider>
+      <RouterProvider router={router} />
+    </UIProvider>
   </React.StrictMode>,
 )

@@ -1,4 +1,14 @@
 import { useNavigate } from "react-router-dom";
+import {
+    // Button,
+    Heading,
+    // Text,
+    Box,
+    // Stack,
+    Flex
+} from "@yamada-ui/react";
+
+const my_repository_name = "yusu_webapp";
 
 const Home = () => {
     const navigate = useNavigate();
@@ -6,22 +16,27 @@ const Home = () => {
         navigate("/Test");
     }
     const reach_home = () => {
-        navigate("/");
+        navigate("/" + my_repository_name + "/");
+        // navigate("/");
     }
     const reach_app = () => {
         navigate("/App");
     }
     return (
         <>
-            <h1>Home</h1>
-            <p>
-                This is Yusuke's home page.
-            </p>
-            <button onClick={reach_test}>Go to test</button>
-            <br />
-            <button onClick={reach_app}>Go to app</button>
-            <br />
-            <button onClick={reach_home}>Go to home</button>
+            <Heading size="3xl" as="h1">Home</Heading>
+            <Heading size="lg" as="h2" color="green.700">This is Yusuke's home page.</Heading>
+            <br/>
+            <Flex gap="md">
+                <Box as="button" onClick={reach_test} p="md" rounded="md" bg="primary" color="white">Test</Box>
+
+                <Box as="button" onClick={reach_app} p="md" rounded="md" bg="secondary" color="white">App</Box>
+
+                <Box as="button" onClick={reach_home} p="md" rounded="md" bg="black" color="white">Home</Box>
+            </Flex>
+            {/* <Box p="md" rounded="md" bg="gray.100" color="black">
+                aaaa
+            </Box> */}
         </>
     )
 }
