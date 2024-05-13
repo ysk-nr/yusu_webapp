@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import Home from "./Home.tsx";
 import App from "./App.tsx";
 import Test from "./components/Test.tsx";
+import ArtifactChecker from "./components/ArtifactChecker.tsx";
 
 import {
   createBrowserRouter,
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
   {
     path: "/Test",
     element: <Test />
+  },
+  {
+    path: "/ArtifactChecker",
+    element: <ArtifactChecker />
   }
 ]);
 

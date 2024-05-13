@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
     // Button,
     Heading,
@@ -22,6 +22,7 @@ const Home = () => {
     const reach_app = () => {
         navigate("/App");
     }
+
     return (
         <>
             <Heading size="3xl" as="h1">Home</Heading>
@@ -32,11 +33,14 @@ const Home = () => {
 
                 <Box as="button" onClick={reach_app} p="md" rounded="md" bg="secondary" color="white">App</Box>
 
-                <Box as="button" onClick={reach_home} p="md" rounded="md" bg="black" color="white">Home</Box>
+                <Link to="/ArtifactChecker">
+                    <Box p="md" rounded="md" bg="danger" color="white">Artifact Checker</Box>
+                </Link>
             </Flex>
-            {/* <Box p="md" rounded="md" bg="gray.100" color="black">
-                aaaa
-            </Box> */}
+            <br/>
+            <Box as="button" onClick={reach_home} p="md" rounded="md" bg="black" color="white" w="sl">
+                Home
+            </Box>
         </>
     )
 }
