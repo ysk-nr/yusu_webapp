@@ -1,7 +1,5 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-// import { App } from './App.tsx'
-// import './index.css'
 import Home from "./Home.tsx";
 import App from "./App.tsx";
 import Test from "./components/Test.tsx";
