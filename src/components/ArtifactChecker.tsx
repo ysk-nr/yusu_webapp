@@ -13,8 +13,6 @@ import {
     // SimpleGrid,
     GridItem,
     SelectItem,
-    toNumber,
-    calc,
     
 } from "@yamada-ui/react";
 
@@ -59,6 +57,10 @@ const subOptions: SelectItem[] = [
     { value: "はずれ", label: "はずれ" },
 ];
 
+// const possibleSubOptions: string[] = [
+//     "攻撃力%", "攻撃力", "防御力%", "防御力", "HP%", "HP", "会心率", "会心ダメージ", "元素熟知", "元素チャージ効率"
+// ];
+
 
 
 const baseOptions: SelectItem[] = [
@@ -101,6 +103,7 @@ function simulateScore(status_list: string[], currentScore: number, goal_score: 
     let max_score: number = 0;
     let scores_sum: number = 0;
     let s_status_list: string[] = [];
+    // 
     for (let i = 0; i < status_list.length; i++) {
         if (status_list[i] == '攻撃力%' && (baseoption == "攻撃力" || baseoption == "攻撃力+HP")) {
             s_status_list.push("攻撃力%");
@@ -125,8 +128,9 @@ function simulateScore(status_list: string[], currentScore: number, goal_score: 
     }
     let loopnum: number = threeoptionflag ? 10000000 : 100000;
     for (let _ = 0; _ < loopnum; _++) {
-        let total_score: number = 0;
+        let total_score: number = currentScore;
         if (threeoptionflag) {
+            // バグです s_status_list
             let new_status: string = s_status_list[Math.floor(Math.random() * s_status_list.length)];
             if (new_status == '攻撃力%' && (baseoption == "攻撃力" || baseoption == "攻撃力+HP")) {
                 s_status_list.push("攻撃力%");
@@ -166,7 +170,7 @@ function simulateScore(status_list: string[], currentScore: number, goal_score: 
     let expected_value: number = scores_sum / loopnum;
     let probability: number = count_over_goal_score / loopnum;
     let min_score_reached_prob: number = 1 - (max_score - 1) / 100;
-    let average_score: number = scores_sum / loopnum;
+    // let average_score: number = scores_sum / loopnum;
     return [expected_value, probability, min_score_reached_prob, min_score];
 }
 
@@ -190,13 +194,16 @@ const ArtifactChecker = () => {
     const [baseOption, setBaseOption] = useState("");
     const [goalScore, setGoalScore] = useState(0);
 
-    function calculateInitialScore(status_list: string[]){
+    function calculateInitialScore(status_list: string[] , suboptionValues: {type: string, value: number}[]){
         let score: number = 0;
         for (let i=0; i<status_list.length; i++){
             let statusType: string = status_list[i];
-            let status_level: number = 4;
+            let status_level: number = scoreValues[statusType].indexOf(suboptionValues[i].value) + 1;
+            console.log("calculateInitialScore:" + score)
             score += calculateScore(statusType, status_level);
         }
+
+        console.log("初期スコア: " + score);
 
         return score;
     }
@@ -227,23 +234,26 @@ const ArtifactChecker = () => {
         let status_list: string[] = [];
         for(let i=0; i<suboptionValues.length; i++){
             
-            if(scoreValues[suboptionValues[i].type].indexOf(suboptionValues[i].value) == -1){
-                alert("サブオプション[" + (i+1) + "]: 不正な値です");
-                return;
-            }
+            // if(scoreValues[suboptionValues[i].type].indexOf(suboptionValues[i].value) == -1){
+            //     alert("サブオプション[" + (i+1) + "]: 不正な値です");
+            //     return;
+            // }
             status_list.push(suboptionValues[i].type);
         }
 
         
-        let currentScore: number = calculateInitialScore(status_list);
+        let currentScore: number = calculateInitialScore(status_list,suboptionValues);
+
+        // あと何回強化されるか
+        let num_rolls: number = Math.floor((20 - level) / 4) + 1;
         
-        let [expected_value, probability, min_score_reached_prob, min_score] = simulateScore(status_list, currentScore, goalScore, level, baseOption);
+        let [expected_value, probability, min_score_reached_prob, min_score] = simulateScore(status_list, currentScore, goalScore, num_rolls, baseOption);
         console.log("期待値: " + expected_value);
         console.log("目標スコア以上の確率: " + probability);
         console.log("最低スコアに到達する確率: " + min_score_reached_prob);
         console.log("最低スコア: " + min_score);
         
-        alert(status_list + " " + level + " " + baseOption + " " + goalScore+ " " + currentScore);
+        alert("status_list:" + status_list.length + " level: " + level + " baseoption: " + baseOption + " goalscore " + goalScore+ " currentscore: " + currentScore);
     }
     
 
