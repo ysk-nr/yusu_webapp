@@ -57,6 +57,10 @@ const subOptions: SelectItem[] = [
     { value: "はずれ", label: "はずれ" },
 ];
 
+const subOptionsList: string[] = [
+    "攻撃力%", "防御力%", "HP%", "会心率", "会心ダメージ", "元素熟知", "元素チャージ効率", "はずれ", "はずれ", "はずれ"
+];
+
 // const possibleSubOptions: string[] = [
 //     "攻撃力%", "攻撃力", "防御力%", "防御力", "HP%", "HP", "会心率", "会心ダメージ", "元素熟知", "元素チャージ効率"
 // ];
@@ -103,7 +107,7 @@ function simulateScore(status_list: string[], currentScore: number, goal_score: 
     let max_score: number = 0;
     let scores_sum: number = 0;
     let s_status_list: string[] = [];
-    // 
+    // status_listから計算に使うステータスだけを抽出
     for (let i = 0; i < status_list.length; i++) {
         if (status_list[i] == '攻撃力%' && (baseoption == "攻撃力" || baseoption == "攻撃力+HP")) {
             s_status_list.push("攻撃力%");
@@ -123,14 +127,18 @@ function simulateScore(status_list: string[], currentScore: number, goal_score: 
             s_status_list.push("はずれ");
         }
     }
+
+    // 3オプの場合はフラグを立てる: ループ回数100倍
     if (status_list.length < 4) {
         threeoptionflag = true;
     }
     let loopnum: number = threeoptionflag ? 10000000 : 100000;
+
+    // ループ回数分だけスコアをシミュレート
     for (let _ = 0; _ < loopnum; _++) {
         let total_score: number = currentScore;
         if (threeoptionflag) {
-            // バグです s_status_list
+            // バグです new_statusはメインと3オプ以外のステータスをランダムに選ぶ
             let new_status: string = s_status_list[Math.floor(Math.random() * s_status_list.length)];
             if (new_status == '攻撃力%' && (baseoption == "攻撃力" || baseoption == "攻撃力+HP")) {
                 s_status_list.push("攻撃力%");
@@ -194,12 +202,54 @@ const ArtifactChecker = () => {
     const [baseOption, setBaseOption] = useState("");
     const [goalScore, setGoalScore] = useState(0);
 
-    function calculateInitialScore(status_list: string[] , suboptionValues: {type: string, value: number}[]){
+    function calculateInitialScore(status_list: string[] , suboptionValues: {type: string, value: number}[], baseOption: string){
         let score: number = 0;
+        let targetStatus: string[] = [];
+
+        // baseOptionによってtargetStatusを変更
+        switch (baseOption) {
+            case "攻撃力":
+                targetStatus = ["攻撃力%", "会心率", "会心ダメージ"];
+                break;
+            case "防御力":
+                targetStatus = ["防御力%", "会心率", "会心ダメージ"];
+                break;
+            case "元素熟知":
+                targetStatus = ["元素熟知", "会心率", "会心ダメージ"];
+                break;
+            case "元素チャージ効率":
+                targetStatus = ["元素チャージ効率", "会心率", "会心ダメージ"];
+                break;
+            case "会心のみ":
+                targetStatus = ["会心率", "会心ダメージ"];
+                break;
+            case "攻撃力+HP":
+                targetStatus = ["攻撃力%", "HP%", "会心率", "会心ダメージ"];
+                break;
+        
+            default:
+                break;
+        }
+
+        // status_listの各要素をスコアに可算(targetStatusに含まれるもののみ)
         for (let i=0; i<status_list.length; i++){
+
+            // targetStatusに含まれないステータスは無視
+            if(targetStatus.includes(status_list[i]) == false){
+                console.log("calculateInitialScore: " + status_list[i] + "は無視");
+                continue;
+            }
+
             let statusType: string = status_list[i];
             let status_level: number = scoreValues[statusType].indexOf(suboptionValues[i].value) + 1;
+            if(status_level == 0){// indexofが-1
+                // 不正な値の時は最高レベルで
+                status_level = 4;
+            }
+
             console.log("calculateInitialScore:" + score)
+            console.log("statusType: " + statusType + " status_level: " + status_level);
+            // 不要なステをスコアに含めない
             score += calculateScore(statusType, status_level);
         }
 
@@ -231,23 +281,25 @@ const ArtifactChecker = () => {
             suboptionValues.push({type: subOp4, value: subOp4Value});
         }
 
+        // status_list: サブオプションの名前のリスト
         let status_list: string[] = [];
         for(let i=0; i<suboptionValues.length; i++){
-            
-            // if(scoreValues[suboptionValues[i].type].indexOf(suboptionValues[i].value) == -1){
-            //     alert("サブオプション[" + (i+1) + "]: 不正な値です");
-            //     return;
-            // }
             status_list.push(suboptionValues[i].type);
         }
 
         
-        let currentScore: number = calculateInitialScore(status_list,suboptionValues);
+        let currentScore: number = calculateInitialScore(status_list,suboptionValues, baseOption);
 
         // あと何回強化されるか
         let num_rolls: number = Math.floor((20 - level) / 4) + 1;
         
-        let [expected_value, probability, min_score_reached_prob, min_score] = simulateScore(status_list, currentScore, goalScore, num_rolls, baseOption);
+        let [
+            expected_value, 
+            probability, 
+            min_score_reached_prob, 
+            min_score
+        ] = simulateScore(status_list, currentScore, goalScore, num_rolls, baseOption);
+
         console.log("期待値: " + expected_value);
         console.log("目標スコア以上の確率: " + probability);
         console.log("最低スコアに到達する確率: " + min_score_reached_prob);
