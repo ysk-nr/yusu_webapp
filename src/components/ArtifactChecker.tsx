@@ -13,6 +13,7 @@ import {
     // SimpleGrid,
     GridItem,
     SelectItem,
+    m,
     
 } from "@yamada-ui/react";
 
@@ -57,9 +58,7 @@ const subOptions: SelectItem[] = [
     { value: "はずれ", label: "はずれ" },
 ];
 
-// const subOptionsList: string[] = [
-//     "攻撃力%", "防御力%", "HP%", "会心率", "会心ダメージ", "元素熟知", "元素チャージ効率", "はずれ", "はずれ", "はずれ"
-// ];
+
 
 // const possibleSubOptions: string[] = [
 //     "攻撃力%", "攻撃力", "防御力%", "防御力", "HP%", "HP", "会心率", "会心ダメージ", "元素熟知", "元素チャージ効率"
@@ -100,31 +99,90 @@ function calculateScore(statusType: string, status_level: number): number {
     return 0;
 }
 
-function simulateScore(status_list: string[], currentScore: number, goal_score: number, num_rolls: number, baseoption: string): [number, number, number, number] {
+function calculateMaxScore(subOps:string[], baseOption: string, num_rolls:number): number {
+    let max_score: number = 0;
+    let targetStatus: string[] = [];
+
+    // baseOptionによってtargetStatusを変更
+    switch (baseOption) {
+        case "攻撃力":
+            targetStatus = ["攻撃力%", "会心率", "会心ダメージ"];
+            break;
+        case "防御力":
+            targetStatus = ["防御力%", "会心率", "会心ダメージ"];
+            break;
+        case "元素熟知":
+            targetStatus = ["元素熟知", "会心率", "会心ダメージ"];
+            break;
+        case "元素チャージ効率":
+            targetStatus = ["元素チャージ効率", "会心率", "会心ダメージ"];
+            break;
+        case "会心のみ":
+            targetStatus = ["会心率", "会心ダメージ"];
+            break;
+        case "攻撃力+HP":
+            targetStatus = ["攻撃力%", "HP%", "会心率", "会心ダメージ"];
+            break;
+    
+        default:
+            break;
+    }
+
+    // status_listの各要素をスコアに可算(targetStatusに含まれるもののみ)
+    for (let i=0; i<subOps.length; i++){
+
+        // targetStatusに含まれないステータスは無視
+        // if(targetStatus.includes(subOps[i]) == true){
+            let statusType: string = subOps[i];
+            let status_level: number = 4;
+            max_score += calculateScore(statusType, status_level) * num_rolls;
+        // }
+        
+    }
+
+    return max_score;
+
+}
+
+function simulateScore(status_list: string[], currentScore: number, goal_score: number, num_rolls: number, baseoption: string, mainOp: string): [number, number, number, number] {
     let threeoptionflag: boolean = false;
     let count_over_goal_score: number = 0;
     let min_score: number = 100;
     let max_score: number = 0;
     let scores_sum: number = 0;
     let s_status_list: string[] = [];
+    let possibleSubOptions: string[] = [
+        "攻撃力%", "防御力%", "HP%", "会心率", "会心ダメージ", "元素熟知", "元素チャージ効率", "はずれ", "はずれ", "はずれ"
+    ];
+    possibleSubOptions = possibleSubOptions.filter(value => value != mainOp);
     // status_listから計算に使うステータスだけを抽出
     for (let i = 0; i < status_list.length; i++) {
         if (status_list[i] == '攻撃力%' && (baseoption == "攻撃力" || baseoption == "攻撃力+HP")) {
+            // s_status_listに"攻撃力%"を追加
             s_status_list.push("攻撃力%");
+            // possibleSubOptionsから"攻撃力%"を削除
+            possibleSubOptions = possibleSubOptions.filter(value => value != status_list[i]);
         } else if (status_list[i] == '防御力%' && baseoption == "防御力") {
             s_status_list.push("防御力%");
+            possibleSubOptions = possibleSubOptions.filter(value => value != status_list[i]);
         } else if (status_list[i] == 'HP%' && (baseoption == "HP" || baseoption == "攻撃力+HP")) {
             s_status_list.push("HP%");
+            possibleSubOptions = possibleSubOptions.filter(value => value != status_list[i]);
         } else if (status_list[i] == '会心率') {
             s_status_list.push("会心率");
+            possibleSubOptions = possibleSubOptions.filter(value => value != status_list[i]);
         } else if (status_list[i] == '会心ダメージ') {
             s_status_list.push("会心ダメージ");
+            possibleSubOptions = possibleSubOptions.filter(value => value != status_list[i]);
         } else if (status_list[i] == '元素熟知' && baseoption == "元素熟知") {
             s_status_list.push("元素熟知");
+            possibleSubOptions = possibleSubOptions.filter(value => value != status_list[i]);
         } else if (status_list[i] == '元素チャージ効率' && baseoption == "元素チャージ効率") {
             s_status_list.push("元素チャージ効率");
+            possibleSubOptions = possibleSubOptions.filter(value => value != status_list[i]);
         } else {
             s_status_list.push("はずれ");
+            possibleSubOptions = possibleSubOptions.filter(value => value != status_list[i]);
         }
     }
 
@@ -138,8 +196,8 @@ function simulateScore(status_list: string[], currentScore: number, goal_score: 
     for (let _ = 0; _ < loopnum; _++) {
         let total_score: number = currentScore;
         if (threeoptionflag) {
-            // バグです new_statusはメインと3オプ以外のステータスをランダムに選ぶ
-            let new_status: string = s_status_list[Math.floor(Math.random() * s_status_list.length)];
+            // new_statusはメインと3オプ以外のステータスをランダムに選ぶ
+            let new_status: string = possibleSubOptions[Math.floor(Math.random() * possibleSubOptions.length)];
             if (new_status == '攻撃力%' && (baseoption == "攻撃力" || baseoption == "攻撃力+HP")) {
                 s_status_list.push("攻撃力%");
             } else if (new_status == '防御力%' && baseoption == "防御力") {
@@ -159,6 +217,7 @@ function simulateScore(status_list: string[], currentScore: number, goal_score: 
             }
             s_status_list.splice(Math.floor(Math.random() * s_status_list.length), 1);
         }
+        // この時点で４オプションが揃っている
         for (let i = 0; i < num_rolls; i++) {
             let statusType: string = s_status_list[Math.floor(Math.random() * s_status_list.length)];
             let status_level: number = Math.floor(Math.random() * 4) + 1;
@@ -174,12 +233,12 @@ function simulateScore(status_list: string[], currentScore: number, goal_score: 
         if (total_score > max_score) {
             max_score = total_score;
         }
+        // max_score = calculateMaxScore(s_status_list, baseoption,num_rolls);
     }
     let expected_value: number = scores_sum / loopnum;
     let probability: number = count_over_goal_score / loopnum;
-    let min_score_reached_prob: number = 1 - (max_score - 1) / 100;
     // let average_score: number = scores_sum / loopnum;
-    return [expected_value, probability, min_score_reached_prob, min_score];
+    return [expected_value, probability, max_score, min_score];
 }
 
 
@@ -189,6 +248,7 @@ const ArtifactChecker = () => {
     // setPartArtifactという関数でしか変更できない
     // 変更例はsetPartArtifact("flower")など。引数に指定したものが代入される。
 
+    const [mainOp, setMainOp] = useState("");
     const [subOp1, setSubOp1] = useState("");
     const [subOp1Value, setSubOp1Value] = useState(0);
     const [subOp2, setSubOp2] = useState("");
@@ -296,16 +356,16 @@ const ArtifactChecker = () => {
         let [
             expected_value, 
             probability, 
-            min_score_reached_prob, 
+            max_score, 
             min_score
-        ] = simulateScore(status_list, currentScore, goalScore, num_rolls, baseOption);
+        ] = simulateScore(status_list, currentScore, goalScore, num_rolls, baseOption, mainOp);
 
         console.log("期待値: " + expected_value);
-        console.log("目標スコア以上の確率: " + probability);
-        console.log("最低スコアに到達する確率: " + min_score_reached_prob);
+        console.log("目標スコア以上の確率: " + probability * 100 + "%");
+        console.log("最大スコア: " + max_score);
         console.log("最低スコア: " + min_score);
         
-        alert("status_list:" + status_list.length + " level: " + level + " baseoption: " + baseOption + " goalscore " + goalScore+ " currentscore: " + currentScore);
+        alert("status_list:" + status_list.length + "\nlevel: " + level + "\nbaseoption: " + baseOption + "\ngoalscore " + goalScore+ "\ncurrentscore: " + currentScore + "\n期待値: " + expected_value + "\n目標スコア以上の確率: " + probability * 100 + "%" + "\n最大スコア: " + max_score + "\n最低スコア: " + min_score);
     }
     
 
@@ -368,7 +428,7 @@ const ArtifactChecker = () => {
                             break;
                     }
                     return (
-                        <Select placeholder="メインオプションを選択(3opの場合は必須)"  w="md" >
+                        <Select placeholder="メインオプションを選択(3opの場合は必須)"  w="md" onChange={(value) => {setMainOp(value);}}>
                             {
                                 options.map((op) => {
                                     return <Option value={op}>{op}</Option>
