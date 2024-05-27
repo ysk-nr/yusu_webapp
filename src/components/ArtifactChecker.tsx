@@ -57,9 +57,9 @@ const subOptions: SelectItem[] = [
     { value: "はずれ", label: "はずれ" },
 ];
 
-const subOptionsList: string[] = [
-    "攻撃力%", "防御力%", "HP%", "会心率", "会心ダメージ", "元素熟知", "元素チャージ効率", "はずれ", "はずれ", "はずれ"
-];
+// const subOptionsList: string[] = [
+//     "攻撃力%", "防御力%", "HP%", "会心率", "会心ダメージ", "元素熟知", "元素チャージ効率", "はずれ", "はずれ", "はずれ"
+// ];
 
 // const possibleSubOptions: string[] = [
 //     "攻撃力%", "攻撃力", "防御力%", "防御力", "HP%", "HP", "会心率", "会心ダメージ", "元素熟知", "元素チャージ効率"
